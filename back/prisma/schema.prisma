@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  nome      String
+  email     String    @unique
+  senhaHash String
+  clientes  Cliente[]
+  produtos  Produto[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cliente {
+  id         String   @id @default(uuid())
+  nome       String
+  email      String   @unique
+  nascimento DateTime
+  vendas     Venda[]
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Produto {
+  id         String   @id @default(uuid())
+  nome       String
+  descricao  String
+  preco      Float
+  quantidade Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  userId        String
+  user          User            @relation(fields: [userId], references: [id])
+  PedidoProduto VendasProduto[]
+}
+
+model Venda {
+  id        String          @id @default(uuid())
+  cliente   Cliente         @relation(fields: [clienteId], references: [id])
+  clienteId String
+  produtos  VendasProduto[]
+  status    String          @default("PENDENTE")
+  total     Float
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model VendasProduto {
+  id         String   @id @default(uuid())
+  venda      Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  vendaId    String
+  produto    Produto  @relation(fields: [produtoId], references: [id])
+  produtoId  String
+  quantidade Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
